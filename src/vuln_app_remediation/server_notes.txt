@@ -1,0 +1,3 @@
+INTERNAL server notes (fake fixture, EXAMPLE-NOT-A-SECRET).
+This file sits OUTSIDE docs_store and should never be reachable through /api/docs.
+Reaching it via name=../server_notes.txt demonstrates the path-traversal flaw.

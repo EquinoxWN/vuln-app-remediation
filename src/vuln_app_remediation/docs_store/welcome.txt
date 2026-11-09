@@ -1,0 +1,3 @@
+Welcome to the vuln-app-remediation document store.
+This directory is meant to be the only place /api/docs can read from.
+The path-traversal flaw lets a crafted name escape it.

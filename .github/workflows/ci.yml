@@ -1,0 +1,51 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: the workflow can read the code and nothing else.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[dev]"
+      - name: Lint and types
+        run: python -m ruff check . && python -m ruff format --check . && python -m mypy
+      - name: Tests (reference exploits included)
+        run: |
+          python -m pytest -q -rs | tee pytest.log
+          echo "::notice title=pytest::$(tail -n 1 pytest.log)"
+      - name: Known-vulnerability audit
+        run: python -m pip_audit --skip-editable
+
+  # The lab in a container with no network at all: the exploits run against the in-process app only.
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: docker build -t vuln-lab:ci .
+      - name: Tests inside the container (no network, read-only, capped)
+        run: |
+          docker run --rm --network none --read-only --tmpfs /tmp --memory 256m --cpus 1 \
+            --cap-drop ALL --security-opt no-new-privileges \
+            vuln-lab:ci python -m pytest -q -p no:cacheprovider | tee docker.log
+          echo "::notice title=docker pytest::$(tail -n 1 docker.log)"

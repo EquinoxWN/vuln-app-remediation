@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vuln-app-remediation"
+version = "0.1.0"
+description = "A local-only OWASP teaching lab: intentional web flaws, each with a reference exploit and a root-cause write-up."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["flask>=3.1,<4"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-timeout>=2.3", "ruff>=0.6", "mypy>=1.11", "pip-audit>=2.7"]
+
+[project.scripts]
+vuln-lab = "vuln_app_remediation.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+vuln_app_remediation = ["docs_store/*.txt", "server_notes.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests"]
+timeout = 120
+
+[tool.ruff]
+line-length = 100
+extend-exclude = [".tmp", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "S", "SIM", "RUF", "N", "C4", "PT", "RET", "PIE", "PERF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests use assert and craft exploit strings on purpose; the app is intentionally insecure.
+"tests/**" = ["S101", "S608", "S310"]
+"src/vuln_app_remediation/app.py" = ["S608", "S310"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = ["conftest"]
+ignore_missing_imports = true
