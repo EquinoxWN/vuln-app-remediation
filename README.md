@@ -13,7 +13,7 @@ Part of my **Cyber Security** list · Python · core project
 
 ## Proof it works
 
-35 tests pass locally, including one reference exploit per catalogued flaw, and the dependency audit is clean:
+36 tests pass locally, including one reference exploit per catalogued flaw, and the dependency audit is clean:
 
 ![pytest and pip-audit output](docs/proof/tests.jpg)
 
@@ -85,7 +85,7 @@ Language: **Python** (3.11+). Code in [`src/vuln_app_remediation/`](src/vuln_app
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 python -m ruff check . && python -m ruff format --check . && python -m mypy   # make lint
-python -m pytest -q -rs                                                      # make test (35 tests)
+python -m pytest -q -rs                                                      # make test (36 tests)
 python -m vuln_app_remediation.cli flaws                                     # make flaws
 ```
 
@@ -115,7 +115,7 @@ Full numbers and commands: [docs/results/m1.md](docs/results/m1.md). The 10-rule
 
 | Check | Result |
 |---|---|
-| Tests | **35 passed**, 0 failed (Windows 11, Python 3.14.5) |
+| Tests | **36 passed**, 0 failed (Windows 11, Python 3.14.5) |
 | Exploits | 7 of 7 catalogued flaws demonstrated |
 | Mutation testing | 8 of 8 hand mutants killed |
 | Lint / types / audit | ruff and mypy `--strict` clean; `pip-audit`: no known vulnerabilities |

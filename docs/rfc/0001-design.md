@@ -19,7 +19,7 @@ named OWASP Top 10 / API Top 10 category with a one-sentence root cause.
 - People learning the OWASP Top 10 who want a running target rather than slides.
 - Reviewers who want a minimal, readable example of each bug class to point to.
 
-## Goals (M1)
+## Goals
 
 - Ship an intentionally vulnerable Flask app that runs **only** on loopback, with a catalogue that
   maps each flaw to OWASP Top 10 2021 and (where it applies) the OWASP API Security Top 10 2023.
