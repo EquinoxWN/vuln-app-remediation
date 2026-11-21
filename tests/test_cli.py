@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 
 import pytest
+from conftest import login
+from flask import Flask
 
 from vuln_app_remediation.catalog import FLAWS
 from vuln_app_remediation.cli import main
@@ -42,3 +44,18 @@ def test_serve_rejects_an_invalid_port(
     monkeypatch.setenv("VULN_APP_PORT", port)
     assert main(["serve"]) == 2
     assert "VULN_APP_PORT" in capsys.readouterr().out
+
+
+def test_served_app_keeps_state_between_requests(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A profile change made through `serve` is still there on the next request."""
+    served: list[Flask] = []
+    monkeypatch.setattr(Flask, "run", lambda self, **_: served.append(self))
+    monkeypatch.setenv("VULN_APP_I_UNDERSTAND", "yes")
+    monkeypatch.delenv("VULN_APP_PORT", raising=False)
+    assert main(["serve"]) == 0
+    client = served[0].test_client()
+    login(client, "alice", "alice-EXAMPLE-NOT-A-SECRET")
+    client.post("/api/profile", json={"email": "changed@lab.invalid"})
+    assert client.post("/api/profile", json={"username": "alice"}).get_json()["email"] == (
+        "changed@lab.invalid"
+    )

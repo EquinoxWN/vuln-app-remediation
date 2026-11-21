@@ -39,9 +39,9 @@ SEED_ORDERS: tuple[tuple[int, int, str, int], ...] = (
 )
 
 
-def connect() -> sqlite3.Connection:
+def connect(*, check_same_thread: bool = True) -> sqlite3.Connection:
     """Open a fresh in-memory database, seeded. Caller owns it and must close it."""
-    conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect(":memory:", check_same_thread=check_same_thread)
     conn.row_factory = sqlite3.Row
     conn.execute(
         "CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL, "

@@ -13,10 +13,11 @@ import sqlite3
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
-from urllib.error import URLError
 from urllib.request import urlopen
 
 from flask import Flask, Response, g, jsonify, request, session
+
+from .db import connect
 
 # Obviously fake, hard-coded on purpose (part of the broken-auth lesson). Not a real secret.
 _FAKE_SECRET_KEY = "EXAMPLE-NOT-A-SECRET-flask-session-key"  # noqa: S105 (inert lab fixture)
@@ -55,8 +56,6 @@ def create_app(
         if shared_conn is not None:
             return shared_conn
         if "db" not in g:
-            from .db import connect
-
             g.db = connect()
         return g.db  # type: ignore[no-any-return]
 
@@ -191,7 +190,7 @@ def create_app(
         target = _DOCS_DIR / name
         try:
             text = target.read_text(encoding="utf-8", errors="replace")
-        except (FileNotFoundError, IsADirectoryError, PermissionError, OSError):
+        except OSError:
             return jsonify(error="cannot read"), 404
         return Response(text, mimetype="text/plain")
 
@@ -214,7 +213,7 @@ def create_app(
             return jsonify(error="url required"), 400
         try:
             data = fetch(url)
-        except (URLError, ValueError, OSError) as exc:
+        except (ValueError, OSError) as exc:
             return jsonify(error=f"fetch failed: {exc}"), 502
         return Response(data, mimetype="application/octet-stream")
 
@@ -234,8 +233,10 @@ def main() -> int:
         print(f"VULN_APP_PORT must be an integer in 1024..65535, got {raw_port!r}")
         return 2
     port = int(raw_port)
-    # Bind to loopback only; never 0.0.0.0.
-    create_app().run(host="127.0.0.1", port=port, debug=False)
+    # One database for the whole run, so later requests see earlier changes; single-threaded
+    # because that SQLite connection is shared. Loopback only, never 0.0.0.0.
+    app = create_app(conn=connect(check_same_thread=False))
+    app.run(host="127.0.0.1", port=port, debug=False, threaded=False)
     return 0
 
 
